@@ -1,16 +1,9 @@
-/**
- * Mock-or-real event service. Mirrors the `gameService` pattern.
- */
 import { mockBrackets } from '@/data/event-brackets.mock';
 import { getEventParticipants } from '@/data/event-participants.mock';
 import { mockEvents } from '@/data/events.mock';
-import { api } from '@/lib/api';
-import { sleep } from '@/lib/utils';
 import type { Bracket } from '@/types/bracket';
 import type { CommunityEvent, EventStatus, EventType } from '@/types/event';
 import type { DirectoryMember } from '@/types/member';
-
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
 
 export type ListEventsParams = {
   q?: string;
@@ -32,35 +25,21 @@ function filterEvents(events: CommunityEvent[], params: ListEventsParams): Commu
 }
 
 export const eventService = {
-  list: USE_MOCK
-    ? async (params: ListEventsParams = {}): Promise<CommunityEvent[]> => {
-        await sleep(50);
-        return filterEvents(mockEvents, params);
-      }
-    : async (params: ListEventsParams = {}) => api.get<CommunityEvent[]>('/events', { params }),
+  list: async (params: ListEventsParams = {}): Promise<CommunityEvent[]> => {
+    return filterEvents(mockEvents, params);
+  },
 
-  all: USE_MOCK
-    ? async (): Promise<CommunityEvent[]> => mockEvents
-    : async () => api.get<CommunityEvent[]>('/events'),
+  all: async (): Promise<CommunityEvent[]> => mockEvents,
 
-  get: USE_MOCK
-    ? async (slug: string): Promise<CommunityEvent | null> => {
-        await sleep(40);
-        return mockEvents.find((e) => e.slug === slug) ?? null;
-      }
-    : async (slug: string) => api.get<CommunityEvent>(`/events/${slug}`),
+  get: async (slug: string): Promise<CommunityEvent | null> => {
+    return mockEvents.find((e) => e.slug === slug) ?? null;
+  },
 
-  listParticipants: USE_MOCK
-    ? async (slug: string): Promise<DirectoryMember[]> => {
-        await sleep(40);
-        return getEventParticipants(slug);
-      }
-    : async (slug: string) => api.get<DirectoryMember[]>(`/events/${slug}/participants`),
+  listParticipants: async (slug: string): Promise<DirectoryMember[]> => {
+    return getEventParticipants(slug);
+  },
 
-  getBracket: USE_MOCK
-    ? async (slug: string): Promise<Bracket | null> => {
-        await sleep(40);
-        return mockBrackets.find((b) => b.eventSlug === slug) ?? null;
-      }
-    : async (slug: string) => api.get<Bracket>(`/events/${slug}/bracket`),
+  getBracket: async (slug: string): Promise<Bracket | null> => {
+    return mockBrackets.find((b) => b.eventSlug === slug) ?? null;
+  },
 };
