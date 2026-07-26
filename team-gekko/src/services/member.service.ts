@@ -1,14 +1,7 @@
-/**
- * Mock-or-real member directory service. Mirrors the `userService` pattern.
- */
 import { mockActivity } from '@/data/activity.mock';
 import { mockMembersDirectory } from '@/data/members-directory.mock';
-import { api } from '@/lib/api';
-import { sleep } from '@/lib/utils';
 import type { ActivityEntry } from '@/types/activity';
 import type { DirectoryMember } from '@/types/member';
-
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
 
 export type ListMembersParams = {
   q?: string;
@@ -36,32 +29,20 @@ function filterMembers(members: DirectoryMember[], params: ListMembersParams): D
 }
 
 export const memberService = {
-  list: USE_MOCK
-    ? async (params: ListMembersParams = {}): Promise<DirectoryMember[]> => {
-        await sleep(60);
-        return filterMembers(mockMembersDirectory, params);
-      }
-    : async (params: ListMembersParams = {}) => api.get<DirectoryMember[]>('/members', { params }),
+  list: async (params: ListMembersParams = {}): Promise<DirectoryMember[]> => {
+    return filterMembers(mockMembersDirectory, params);
+  },
 
-  all: USE_MOCK
-    ? async (): Promise<DirectoryMember[]> => mockMembersDirectory
-    : async () => api.get<DirectoryMember[]>('/members'),
+  all: async (): Promise<DirectoryMember[]> => mockMembersDirectory,
 
-  get: USE_MOCK
-    ? async (username: string): Promise<DirectoryMember | null> => {
-        await sleep(40);
-        return mockMembersDirectory.find((m) => m.username === username) ?? null;
-      }
-    : async (username: string) => api.get<DirectoryMember>(`/members/${username}`),
+  get: async (username: string): Promise<DirectoryMember | null> => {
+    return mockMembersDirectory.find((m) => m.username === username) ?? null;
+  },
 
-  listActivity: USE_MOCK
-    ? async (username: string, limit = 8): Promise<ActivityEntry[]> => {
-        await sleep(40);
-        return mockActivity
-          .filter((a) => a.username === username)
-          .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
-          .slice(0, limit);
-      }
-    : async (username: string, limit = 8) =>
-        api.get<ActivityEntry[]>(`/members/${username}/activity`, { params: { limit } }),
+  listActivity: async (username: string, limit = 8): Promise<ActivityEntry[]> => {
+    return mockActivity
+      .filter((a) => a.username === username)
+      .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+      .slice(0, limit);
+  },
 };

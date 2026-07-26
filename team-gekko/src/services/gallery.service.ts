@@ -1,12 +1,5 @@
-/**
- * Mock-or-real gallery service.
- */
 import { mockGallery } from '@/data/gallery.mock';
-import { api } from '@/lib/api';
-import { sleep } from '@/lib/utils';
 import type { GalleryCategory, GalleryItem } from '@/types/gallery';
-
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
 
 export type ListGalleryParams = {
   q?: string;
@@ -29,21 +22,13 @@ function filterGallery(items: GalleryItem[], params: ListGalleryParams): Gallery
 }
 
 export const galleryService = {
-  list: USE_MOCK
-    ? async (params: ListGalleryParams = {}): Promise<GalleryItem[]> => {
-        await sleep(50);
-        return filterGallery(mockGallery, params);
-      }
-    : async (params: ListGalleryParams = {}) => api.get<GalleryItem[]>('/gallery', { params }),
+  list: async (params: ListGalleryParams = {}): Promise<GalleryItem[]> => {
+    return filterGallery(mockGallery, params);
+  },
 
-  all: USE_MOCK
-    ? async (): Promise<GalleryItem[]> => mockGallery
-    : async () => api.get<GalleryItem[]>('/gallery'),
+  all: async (): Promise<GalleryItem[]> => mockGallery,
 
-  get: USE_MOCK
-    ? async (id: string): Promise<GalleryItem | null> => {
-        await sleep(40);
-        return mockGallery.find((g) => g.slug === id || g.id === id) ?? null;
-      }
-    : async (id: string) => api.get<GalleryItem>(`/gallery/${id}`),
+  get: async (id: string): Promise<GalleryItem | null> => {
+    return mockGallery.find((g) => g.slug === id || g.id === id) ?? null;
+  },
 };

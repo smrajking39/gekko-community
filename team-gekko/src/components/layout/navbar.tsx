@@ -1,6 +1,5 @@
 'use client';
 
-import { UserMenu } from '@/components/auth/user-menu';
 import { PulseDot } from '@/components/shared/pulse-dot';
 import { type NavItem, publicNav } from '@/config/nav.config';
 import { siteConfig } from '@/config/site.config';
@@ -89,7 +88,14 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:block">
-            <UserMenu />
+            <a
+              href={siteConfig.links.discord}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-(--color-gekko-500) px-3.5 py-2 text-sm font-medium text-(--color-bg-void) transition hover:bg-(--color-gekko-400)"
+            >
+              Join Discord
+            </a>
           </div>
 
           <button
@@ -125,8 +131,15 @@ export function Navbar() {
                   />
                 ))}
               </nav>
-              <div className="mt-3">
-                <UserMenu variant="mobile" />
+              <div className="mt-3 border-t border-(--glass-border) pt-3">
+                <a
+                  href={siteConfig.links.discord}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block rounded-lg bg-(--color-gekko-500) px-3 py-2 text-center text-sm font-medium text-(--color-bg-void) transition hover:bg-(--color-gekko-400)"
+                >
+                  Join Discord
+                </a>
               </div>
             </div>
           </>
