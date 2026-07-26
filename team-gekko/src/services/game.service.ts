@@ -1,18 +1,9 @@
-/**
- * Mock-or-real game service. Mirrors the pattern in `user.service.ts`.
- * Server components and client components can both call into this since
- * `process.env.NEXT_PUBLIC_USE_MOCK` is available in both runtimes.
- */
 import { mockGames } from '@/data/games.mock';
 import { mockMatches } from '@/data/matches.mock';
 import { mockSquads } from '@/data/squads.mock';
-import { api } from '@/lib/api';
-import { sleep } from '@/lib/utils';
 import type { Game, GameGenre, GameStatus } from '@/types/game';
 import type { Match } from '@/types/match';
 import type { Squad } from '@/types/squad';
-
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
 
 export type ListGamesParams = {
   q?: string;
@@ -34,35 +25,22 @@ function filterGames(games: Game[], params: ListGamesParams): Game[] {
 }
 
 export const gameService = {
-  list: USE_MOCK
-    ? async (params: ListGamesParams = {}): Promise<Game[]> => {
-        await sleep(60);
-        return filterGames(mockGames, params);
-      }
-    : async (params: ListGamesParams = {}) => api.get<Game[]>('/games', { params }),
+  list: async (params: ListGamesParams = {}): Promise<Game[]> => {
+    return filterGames(mockGames, params);
+  },
 
   /** Returns every game without filters — handy for static generation. */
-  all: USE_MOCK ? async (): Promise<Game[]> => mockGames : async () => api.get<Game[]>('/games'),
+  all: async (): Promise<Game[]> => mockGames,
 
-  get: USE_MOCK
-    ? async (slug: string): Promise<Game | null> => {
-        await sleep(40);
-        return mockGames.find((g) => g.slug === slug) ?? null;
-      }
-    : async (slug: string) => api.get<Game>(`/games/${slug}`),
+  get: async (slug: string): Promise<Game | null> => {
+    return mockGames.find((g) => g.slug === slug) ?? null;
+  },
 
-  listSquads: USE_MOCK
-    ? async (gameSlug: string): Promise<Squad[]> => {
-        await sleep(40);
-        return mockSquads.filter((s) => s.gameSlug === gameSlug);
-      }
-    : async (gameSlug: string) => api.get<Squad[]>(`/games/${gameSlug}/squads`),
+  listSquads: async (gameSlug: string): Promise<Squad[]> => {
+    return mockSquads.filter((s) => s.gameSlug === gameSlug);
+  },
 
-  listMatches: USE_MOCK
-    ? async (gameSlug: string, limit = 6): Promise<Match[]> => {
-        await sleep(40);
-        return mockMatches.filter((m) => m.gameSlug === gameSlug).slice(0, limit);
-      }
-    : async (gameSlug: string, limit = 6) =>
-        api.get<Match[]>(`/games/${gameSlug}/matches`, { params: { limit } }),
+  listMatches: async (gameSlug: string, limit = 6): Promise<Match[]> => {
+    return mockMatches.filter((m) => m.gameSlug === gameSlug).slice(0, limit);
+  },
 };
