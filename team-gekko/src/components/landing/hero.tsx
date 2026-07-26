@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { siteConfig } from '@/config/site.config';
 import { gamesShowcase } from '@/data/games-showcase';
 import { cn } from '@/lib/utils';
 import { ArrowRight, ChevronDown } from 'lucide-react';
@@ -109,9 +110,9 @@ export function Hero() {
 
             <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <Button asChild size="xl" className="w-full sm:w-auto">
-                <Link href="/register">
+                <a href={siteConfig.links.discord} target="_blank" rel="noopener noreferrer">
                   Join the community <ArrowRight className="size-4" />
-                </Link>
+                </a>
               </Button>
               <Button asChild variant="glass" size="xl" className="w-full sm:w-auto">
                 <Link href="/games">Browse the games</Link>
