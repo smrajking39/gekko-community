@@ -1,0 +1,22 @@
+# Normalize all text files to LF in the repo and working tree.
+# Matches biome.json (`lineEnding: lf`) so lint is stable across OSes and
+# Windows checkouts don't reintroduce CRLF.
+* text=auto eol=lf
+
+# Binary assets — never touch line endings.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.svg   text eol=lf
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+*.pdf   binary
+*.mp4   binary
+*.webm  binary
+*.zip   binary

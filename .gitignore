@@ -1,0 +1,51 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js
+.next
+out
+build
+dist
+.vercel
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# TypeScript
+*.tsbuildinfo
+**/next-env.d.ts
+
+# Prisma local DB
+**/prisma/dev.db*
+
+# Test artifacts
+coverage
+.playwright
+playwright-report
+test-results
+
+# Storybook
+storybook-static
+
+# Local asset originals (not deployed; project copies live in team-gekko/public/)
+assets/
+NEXT.md
+.vercel
+.env*.local

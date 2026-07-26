@@ -1,0 +1,226 @@
+// Team Gekko — initial Prisma schema
+// Phase 0: foundation models (User, Role, Permission, Session, Account, VerificationToken).
+// Subsequent phases extend this file as new modules land. Do not edit
+// migrations by hand — always use `prisma migrate dev` after schema changes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// AUTH (Auth.js compatible) + extensions
+// =============================================================================
+
+model User {
+  id              String    @id @default(cuid())
+  username        String    @unique
+  email           String    @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String?
+  name            String?
+  displayName     String?
+  image           String?
+  avatar          String?
+  coverImage      String?
+  bio             String?
+  pronouns        String?
+  location        String?
+  timezone        String?
+  websiteUrl      String?
+
+  // OAuth identities
+  discordId       String?   @unique
+  githubId        String?   @unique
+  twitchId        String?   @unique
+
+  status          UserStatus @default(active)
+  privacy         Privacy    @default(public)
+  preferences     Json?
+
+  xp              Int        @default(0)
+  level           Int        @default(1)
+
+  // 2FA
+  twoFaSecret     String?
+  twoFaEnabled    Boolean    @default(false)
+  recoveryCodes   String[]
+
+  lastSeenAt      DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  roles           UserRole[]
+  accounts        Account[]
+  sessions        Session[]
+  auditLogs       AuditLog[]
+}
+
+enum UserStatus {
+  active
+  pending
+  suspended
+  banned
+}
+
+enum Privacy {
+  public
+  members
+  private
+}
+
+// =============================================================================
+// RBAC
+// =============================================================================
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  isSystem    Boolean      @default(false)
+  sortOrder   Int          @default(0)
+  permissions Permission[] @relation("RolePermissions")
+  users       UserRole[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String
+  roles       Role[]   @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+// =============================================================================
+// Auth.js core tables
+// =============================================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  // Extra fields for "active sessions" UI + audit
+  userAgent    String?
+  ip           String?
+  city         String?
+  country      String?
+  lastActiveAt DateTime @updatedAt
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  type       VerificationType @default(email)
+  createdAt  DateTime @default(now())
+
+  @@id([identifier, token])
+}
+
+enum VerificationType {
+  email
+  password_reset
+  magic_link
+}
+
+// =============================================================================
+// AUDIT
+// =============================================================================
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  actorId        String?
+  impersonatorId String?
+  action         String   // e.g. "user.update", "post.publish"
+  targetType     String?  // e.g. "user", "post"
+  targetId       String?
+  diff           Json?
+  ip             String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// FEATURE FLAGS (admin-toggleable runtime config)
+// =============================================================================
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================================
+// SITE METRICS (lightweight vanity counters — visit / page-view totals)
+// =============================================================================
+
+// A single-row-per-key counter table. Keys currently in use:
+//   - "page_views"      total page views (incremented on every footer mount)
+//   - "unique_visitors" distinct visitors (incremented only when the first-party
+//                       `gk_vid` cookie is absent on the request)
+model SiteMetric {
+  key       String   @id
+  count     BigInt   @default(0)
+  updatedAt DateTime @updatedAt
+}
